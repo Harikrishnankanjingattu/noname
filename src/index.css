@@ -85,7 +85,12 @@
     }
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-display;
     /* Prevent text overflow on mobile */
     overflow-wrap: break-word;
@@ -93,7 +98,8 @@
   }
 
   /* Better touch targets */
-  button, a {
+  button,
+  a {
     min-height: 44px;
     display: inline-flex;
     align-items: center;
@@ -106,7 +112,8 @@
   }
 
   /* Remove default input styling on mobile */
-  input, textarea {
+  input,
+  textarea {
     -webkit-appearance: none;
     appearance: none;
     border-radius: var(--radius);
@@ -129,6 +136,7 @@
   .hover-glow {
     @apply transition-all duration-300;
   }
+
   .hover-glow:hover {
     box-shadow: 0 0 30px hsl(var(--glow-strong));
   }
@@ -136,10 +144,12 @@
   .line-accent {
     @apply relative;
   }
+
   .line-accent::after {
     content: '';
     @apply absolute bottom-0 left-0 w-0 h-[1px] bg-foreground transition-all duration-500;
   }
+
   .line-accent:hover::after {
     @apply w-full;
   }
@@ -152,6 +162,7 @@
   .noise {
     position: relative;
   }
+
   .noise::before {
     content: '';
     position: absolute;
@@ -190,11 +201,72 @@
     width: 4px;
     height: 4px;
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
+
   ::-webkit-scrollbar-thumb {
     background: hsl(0 0% 25%);
     border-radius: 2px;
+  }
+
+  /* ── CSS animation replacements for framer-motion infinite loops ── */
+
+  /* Orb pulse: scale + opacity cycle (replaces framer-motion animate on FloatingOrbs) */
+  @keyframes orb-pulse {
+
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+
+    50% {
+      transform: scale(1.15);
+      opacity: 1;
+    }
+  }
+
+  .orb-pulse {
+    animation: orb-pulse 7s ease-in-out infinite;
+  }
+
+  /* Profile ring spin (replaces framer-motion rotate: 360 infinite) */
+  @keyframes ring-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .ring-spin {
+    animation: ring-spin 20s linear infinite;
+  }
+
+  /* Badge float: gentle up-down (replaces framer-motion y: [-4, 4, -4] infinite) */
+  @keyframes badge-float {
+
+    0%,
+    100% {
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    50% {
+      transform: translateX(-50%) translateY(4px);
+    }
+  }
+
+  .badge-float {
+    animation: badge-float 3s ease-in-out infinite;
+  }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+
+    .orb-pulse,
+    .ring-spin,
+    .badge-float {
+      animation: none;
+    }
   }
 }

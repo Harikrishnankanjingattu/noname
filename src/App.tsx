@@ -4,26 +4,63 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import AdminLogin from "@/components/AdminLogin";
 import AdminPanel from "@/components/AdminPanel";
 import { useAdmin } from "@/hooks/useAdmin";
-import Index from "./pages/Index";
-import Experience from "./pages/Experience";
-import Projects from "./pages/Projects";
-import Certifications from "./pages/Certifications";
-import Achievements from "./pages/Achievements";
-import Events from "./pages/Events";
-import Connect from "./pages/Connect";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy-loaded pages — each becomes its own JS chunk
+const Index = lazy(() => import("./pages/Index"));
+const Experience = lazy(() => import("./pages/Experience"));
+const Projects = lazy(() => import("./pages/Projects"));
+const Certifications = lazy(() => import("./pages/Certifications"));
+const Achievements = lazy(() => import("./pages/Achievements"));
+const Events = lazy(() => import("./pages/Events"));
+const Connect = lazy(() => import("./pages/Connect"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 min — reduces redundant network fetches
+      retry: 1,
+    },
+  },
+});
+
+// Lighter transition: no blur (GPU-intensive), shorter duration
 const pageVariants = {
-  initial: { opacity: 0, y: 16, filter: "blur(4px)" },
-  animate: { opacity: 1, y: 0, filter: "blur(0px)" },
-  exit: { opacity: 0, y: -10, filter: "blur(2px)" },
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
 };
+
+/** Minimal pure-CSS spinner shown while lazy chunks are downloading.
+ *  No extra imports — inline styles keep it zero-cost until mount. */
+const PageLoader = () => (
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "100vh",
+      background: "hsl(0 0% 3%)",
+    }}
+  >
+    <div
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: "50%",
+        border: "2px solid hsl(0 0% 20%)",
+        borderTopColor: "hsl(0 0% 90%)",
+        animation: "spin 0.7s linear infinite",
+      }}
+    />
+    <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+  </div>
+);
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -37,16 +74,18 @@ const AnimatedRoutes = () => {
         exit="exit"
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
       >
-        <Routes location={location}>
-          <Route path="/" element={<Index />} />
-          <Route path="/experience" element={<Experience />} />
-          <Route path="/projects" element={<Projects />} />
-          <Route path="/certifications" element={<Certifications />} />
-          <Route path="/achievements" element={<Achievements />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/connect" element={<Connect />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes location={location}>
+            <Route path="/" element={<Index />} />
+            <Route path="/experience" element={<Experience />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/certifications" element={<Certifications />} />
+            <Route path="/achievements" element={<Achievements />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/connect" element={<Connect />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   );

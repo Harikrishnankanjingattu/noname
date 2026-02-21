@@ -41,17 +41,17 @@ const TypingText = () => {
   );
 };
 
-/** Floating orb decorations */
+/** Floating orb decorations — pure CSS animations to avoid JS animation threads */
 const FloatingOrbs = () => (
   <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-    {[
-      { size: 280, x: "75%", y: "10%", delay: 0, dur: 7 },
-      { size: 200, x: "10%", y: "60%", delay: 2, dur: 9 },
-      { size: 150, x: "85%", y: "70%", delay: 1, dur: 11 },
-    ].map((orb, i) => (
-      <motion.div
+    {([
+      { size: 280, x: "75%", y: "10%", dur: "7s", delay: "0s" },
+      { size: 200, x: "10%", y: "60%", dur: "9s", delay: "-3s" },
+      { size: 150, x: "85%", y: "70%", dur: "11s", delay: "-5s" },
+    ] as const).map((orb, i) => (
+      <div
         key={i}
-        className="absolute rounded-full"
+        className="absolute rounded-full orb-pulse"
         style={{
           width: orb.size,
           height: orb.size,
@@ -59,9 +59,10 @@ const FloatingOrbs = () => (
           top: orb.y,
           background: `radial-gradient(circle, hsl(0 0% 100% / 0.04) 0%, transparent 70%)`,
           filter: "blur(40px)",
+          animationDuration: orb.dur,
+          animationDelay: orb.delay,
+          willChange: "opacity, transform",
         }}
-        animate={{ scale: [1, 1.15, 1], opacity: [0.5, 1, 0.5] }}
-        transition={{ duration: orb.dur, delay: orb.delay, repeat: Infinity, ease: "easeInOut" }}
       />
     ))}
   </div>
@@ -195,22 +196,22 @@ const Index = () => {
               className="order-1 md:order-2 flex justify-center md:block"
             >
               <div className="relative w-40 h-40 sm:w-52 sm:h-52 md:w-64 md:h-64 lg:w-72 lg:h-72">
-                {/* Rotating ring */}
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full"
+                {/* Rotating ring — CSS animation instead of JS to avoid layout thrashing */}
+                <div
+                  className="absolute inset-0 rounded-full ring-spin"
                   style={{
                     background: "conic-gradient(from 0deg, transparent 60%, hsl(0 0% 100% / 0.4), transparent)",
                     padding: "2px",
+                    willChange: "transform",
                   }}
                 />
-                {/* Glow pulse ring */}
-                <motion.div
-                  animate={{ scale: [1, 1.06, 1], opacity: [0.4, 0.9, 0.4] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute inset-[-6px] rounded-full"
-                  style={{ background: "radial-gradient(circle at center, hsl(0 0% 100% / 0.12), transparent 70%)" }}
+                {/* Glow pulse ring — CSS animation */}
+                <div
+                  className="absolute inset-[-6px] rounded-full orb-pulse"
+                  style={{
+                    background: "radial-gradient(circle at center, hsl(0 0% 100% / 0.12), transparent 70%)",
+                    willChange: "opacity, transform",
+                  }}
                 />
                 {/* Profile image */}
                 <div className="absolute inset-[3px] rounded-full overflow-hidden border border-border bg-card">
@@ -219,16 +220,19 @@ const Index = () => {
                     alt="Harikrishnan K"
                     className="w-full h-full object-cover object-top"
                     draggable={false}
+                    // LCP element — hint browser to prioritise fetching this image
+                    fetchPriority="high"
+                    loading="eager"
+                    decoding="async"
                   />
                 </div>
-                {/* Floating badge */}
-                <motion.div
-                  animate={{ y: [-4, 4, -4] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-card border border-border rounded-full font-mono text-xs text-muted-foreground whitespace-nowrap shadow-lg"
+                {/* Floating badge — CSS animation */}
+                <div
+                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-card border border-border rounded-full font-mono text-xs text-muted-foreground whitespace-nowrap shadow-lg badge-float"
+                  style={{ willChange: "transform" }}
                 >
                   CGPA 9.18 ✦
-                </motion.div>
+                </div>
               </div>
             </motion.div>
           </div>
